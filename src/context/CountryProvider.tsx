@@ -1,12 +1,12 @@
 import { useState, useMemo, type ReactNode } from "react";
-import type { Country, CountryContextType } from "../types/country.types";
+import type { Country, CountryContextType,ApiResponse } from "../types/country.types";
 import { useFetch } from "../hooks/useFetch";
 import { CountryContext } from "./CountryContext";
 
 const ITEMS_PER_PAGE = 9;
 
 export const CountryProvider = ({ children }: { children: ReactNode }) => {
-    const { data, loading, error } = useFetch<Country[]>('/countries/v5');
+  const { data, loading, error } = useFetch<ApiResponse>('/countries/v5');
     const [favorites, setFavorites] = useState<Country[]>([]);
     const [search, setSearch] = useState<string>('');
     const [region, setRegion] = useState<string>('All');
@@ -24,12 +24,14 @@ export const CountryProvider = ({ children }: { children: ReactNode }) => {
         setFavorites((prev) => prev.filter((country) => country.cca3 !== code));
     };
 
-    const byRegion = data
-        ? data.filter((country) => region === 'All' || country.region === region)
-        : [];
+const rawCountries = data?.data?.objects ?? [];
+
+const byRegion = rawCountries.filter(
+  (country) => region === 'All' || country.region === region
+);
 
     const filteredCountries = byRegion.filter((country) =>
-        country.name.common.toLowerCase().includes(search.toLowerCase())
+        country.names.common.toLowerCase().includes(search.toLowerCase())
     );
 
     // Pagination logic
